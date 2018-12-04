@@ -49,6 +49,4 @@ public class Num16 {
         return exponent > 0? r : 1/r;
     }
 
-
-
 }
