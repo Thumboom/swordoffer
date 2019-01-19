@@ -1,52 +1,50 @@
 package chapter5;
 
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
 /**
- * 在古老的一维模式识别中,常常需要计算连续子向量的最大和,
- * 当向量全为正数的时候,问题很好解决。但是,如果向量中包含
- * 负数,是否应该包含某个负数,并期望旁边的正数会弥补它呢？
- * 例如:{6,-3,-2,7,-15,1,2,2},连续子向量的最大和为8(从第
- * 0个开始,到第3个为止)。给一个数组，返回它的最大连续子序
- * 列的和，你会不会被他忽悠住？(子向量的长度至少是1)
+ * 如何得到一个数据流中的中位数？如果从数据流中读出奇数个数值，
+ * 那么中位数就是所有数值排序之后位于中间的数值。如果从数据流
+ * 中读出偶数个数值，那么中位数就是所有数值排序之后中间两个数
+ * 的平均值。我们使用Insert()方法读取数据流，使用GetMedian()
+ * 方法获取当前读取数据的中位数。
  */
 public class Num41 {
+    PriorityQueue<Integer> small = new PriorityQueue<Integer>();
+    PriorityQueue<Integer> big = new PriorityQueue<Integer>(new Comparator() {
+        @Override
+        public int compare(Object o1, Object o2) {
+            Integer i1 = (Integer)o1;
+            Integer i2 = (Integer) o2;
+            return i2 - i1;
+
+        }
+    });
+
 
     /**
-     * 我的思路：包含负数的情况什么条件下才能作为最大值的一部分呢？
-     * 当前面的正数与后面连续存在的负数的和为正数时，其后面还有正数时，
-     * 才能当成最大连续子向量的一部分。设置标志保存目前找到的最大连续
-     * 子向量的开始和结束位置和其最大值，然后继续遍历剩下的子向量。当
-     * 遇到有负数的情况时，如果连续和小于0， 则重新在剩下的子向量中去
-     * 寻找可能存在的连续子向量。
-     * @param array
-     * @return
+     * 我的思路：一个大顶堆保存一半的数，一个小顶堆保存另一半的数。
+     * 如果新加入的数比大顶堆的顶要大或等于，就加入小顶堆中；小，就加入大顶堆。
+     * 然后调整两个堆的元素数量，使得大顶堆中要么比小顶堆多1，要么一样。
+     * @param num
      */
-    public int FindGreatestSumOfSubArray(int[] array) {
-        if(array.length == 1) return array[0];
-        int max_start = 0;
-        int max_end = 0;
+    public void Insert(Integer num) {
 
-        int max = array[0];
-
-        int try_start = 0;
-        int try_end = 0;
-        int try_max = 0;
-
-        for( int i = 0; i < array.length; i ++){
-            try_max += array[i];
-
-            if( try_max < 0 && try_max < max) {
-                try_start = i + 1;
-                try_end = i + 1;
-                try_max = 0;
-                continue;
-            }
-            try_end = i;
-            if( try_max > max){
-                max = try_max;
-                max_start = try_start;
-                max_end = try_end;
-            }
-        }
-        return max;
+        if( big.isEmpty() || big.peek() > num) big.add(num);
+        else small.add(num);
+        adjust();
     }
+
+    private void adjust() {
+        if( big.size() == small.size() + 2) small.add(big.poll());
+        if( small.size() == big.size() + 1) big.add(small.poll());
+
+    }
+
+    public Double GetMedian() {
+
+        return small.size() == big.size() ? (small.peek() + big.peek()) / 2.0 : 1.0 * big.peek() ;
+    }
+
 }
